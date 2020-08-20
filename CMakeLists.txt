@@ -13,6 +13,8 @@ set(CMAKE_CXX_FLAGS "-Wall")
 # Add the executable
 add_executable(Mybashbrace main.cpp)
 
+install(TARGETS Mybashbrace DESTINATION bin)
+
 set_target_properties( Mybashbrace
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
