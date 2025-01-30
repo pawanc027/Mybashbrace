@@ -1,109 +1,231 @@
-Parent Story: SALT-XXXX: Comprehensive Testing of Proxy/Credit Server Lifecycle
-(Description: This story encompasses all testing related to the proxy/credit server's lifecycle, including initialization, startup, license management, shutdown, and various operational options.)
-Child Stories:
-1. SALT-XXXX-1: Verify Proxy/Credit Server Startup
- * Description: Tests server startup in regular and credit modes, verifying license handling and error logging.  Ensures the server starts correctly with various license configurations.
+
+SALT-XXXX-10: Verify Vendor Data Handling
+ * Description: This test suite verifies license checkout behavior with different vendor data configurations, ensuring correct license sharing and separation based on vendor data and dup group settings.
  * Acceptance Criteria:
-   * Regular mode startup with regular license.
-   * Credit mode startup with credit license.
-   * Correct handling of multiple credit server IDs.
-   * Proper error logging during startup.
+   * Licenses are shared when identical vendor data is used.
+   * Licenses are not shared when distinct vendor data is used.
+   * dup group = NONE prevents sharing, even with identical vendor data.
  * Test Cases:
-   * TC_Startup_Regular: Verify the server starts successfully in regular mode when a valid regular license is present in the configuration.
-   * TC_Startup_Credit: Verify the server starts successfully in credit mode when a valid credit license is present in the configuration.
-   * TC_Startup_MultipleIDs: Verify the server correctly handles situations where multiple credit server ID features are present in the license configuration (define the expected behavior when multiple IDs are present).
-   * TC_Startup_Errors: Verify the server logs appropriate errors and handles invalid license configurations or other startup-related issues gracefully, preventing the server from starting if necessary.
- * Story Points: 5
-2. SALT-XXXX-2: Verify Proxy/Credit Server License File Reread
- * Description: Tests dynamic license file reread, including mode switching and ECA handling.  Verifies the server can adapt to license changes without a restart.
+   * TC_10.1_License_Sharing_Identical_Vendor_Data: Verify license sharing with identical vendor data.
+   * TC_10.2_Separate_Checkouts_Distinct_Vendor_Data: Verify separate checkouts with distinct vendor data.
+   * TC_10.3_Dup_Group_None_Prevents_Sharing: Verify dup group = NONE prevents sharing.
+SALT-XXXX-11: Verify Options File Functionality
+ * Description: This test suite validates the saltd.opt options file, verifying include/exclude list functionality for license checkout control.
  * Acceptance Criteria:
-   * Seamless mode switching via reread.
-   * Correct handling of same/different ECAs.
-   * No disruption of existing licenses.
+   * Excluded licenses cannot be checked out.
+   * Included licenses (if available) can be checked out.
  * Test Cases:
-   * TC_Reread_NormalToNormal: Verify that rereading the license file when the server is already in normal mode (and the file content is unchanged) does not cause any disruption or errors.
-   * TC_Reread_ModeSwitch: Verify the server correctly switches modes (from normal to credit, and vice versa) when the license file is modified and reread.
-   * TC_Reread_ECA: Verify the server correctly handles situations where the Entity/Customer Account (ECA) in the license file changes during a reread, including initiating a new CLS session if necessary.
- * Story Points: 5
-3. SALT-XXXX-3: Verify Proxy/Credit Server Shutdown Procedures
- * Description: Tests controlled shutdown in various scenarios, including license handling and CLS reporting.  Verifies a clean and orderly shutdown process.
+   * TC_11.1_Exclude_License: Verify excluding a license prevents checkout.
+   * TC_11.2_Include_License: Verify including a license allows checkout.
+SALT-XXXX-12: Verify Other FNP Functions Behavior
+ * Description: This test suite verifies the behavior of FNP functions: lc_checkout (presence check), lc_get_config, lc_userlist, and lc_get_attr.
  * Acceptance Criteria:
-   * Graceful shutdown with check-in and report.
-   * Forced shutdown with check-in (if possible).
-   * Correct behavior when Imgrd or saltd is killed.
+   * lc_checkout as presence check doesn't consume a license.
+   * lc_get_config returns correct license configuration.
+   * lc_userlist returns correct user list.
+   * lc_get_attr returns correct license pool information.
+   * Function behavior is correct when credits are disabled.
  * Test Cases:
-   * TC_Shutdown_Graceful: Verify the server shuts down gracefully when the Imdown command is used, including checking in all checked-out licenses and sending a report to the CLS.
-   * TC_Shutdown_Forced: Verify the server attempts to check in all checked-out licenses and send a report to the CLS during a forced shutdown (e.g., using sc stop), even if the shutdown is not as graceful.
-   * TC_Shutdown_Killed: Verify the server's behavior when the Imgrd or saltd process is unexpectedly terminated (e.g., killed), ensuring licenses are recovered and the server restarts or shuts down safely.
- * Story Points: 5
-4. SALT-XXXX-4: Verify Proxy/Credit Server Initialization
- * Description: Tests initial communication and session establishment with the CLS/mock server. Verifies the server can correctly initialize and establish a connection.
+   * TC_12.1_lc_checkout_Presence_Check: Verify lc_checkout as a presence check.
+   * TC_12.2_lc_get_config_Retrieval: Verify lc_get_config information retrieval.
+   * TC_12.3_lc_userlist_Retrieval: Verify lc_userlist user list retrieval.
+   * TC_12.4_lc_get_attr_Retrieval: Verify lc_get_attr license pool info retrieval.
+   * TC_12.5_FNP_Functions_No_Credits: Verify FNP function behavior with no credits.
+
+SALT-XXXX-13: Verify License Time Out
+ * Description: This test verifies the server's behavior regarding license reclamation when a client's license lease expires due to inactivity (no heartbeats).
  * Acceptance Criteria:
-   * Successful session allows license checkout.
-   * Disabled credits prevent checkout.
-   * CLS offline triggers retries; errors disable credit usage.
+   * Server reclaims licenses after the license timeout period.
+   * Credit-based licenses may not time out due to their nature.
+   * Timeout values below one minute are allowed but may have limited effect.
  * Test Cases:
-   * TC_Init_Success: Verify the server successfully establishes a session with the CLS when it is online and makes licenses available for checkout.
-   * TC_Init_CreditsDisabled: Verify the server correctly handles initialization when credit-based licenses are disabled, preventing their checkout.
-   * TC_Init_Offline: Verify the server's retry mechanism when the CLS is offline during initialization.
-   * TC_Init_Error: Verify the server's error handling when initialization fails due to an error (e.g., invalid configuration).
- * Story Points: 5
-5. SALT-XXXX-5: Verify Proxy/Credit Server Re-initialization Attempts
- * Description: Tests re-initialization attempts after initial failures. Verifies the server can recover from connectivity issues.
+   * TC_13.1_License_Timeout_Reclamation: Verify license reclamation after timeout.
+   * TC_13.2_Credit_License_No_Timeout: Verify credit-based licenses do not time out.
+SALT-XXXX-14: Verify Client Time Out
+ * Description: This test verifies the server's handling of client disconnections and license releases when a client times out.
  * Acceptance Criteria:
-   * Retries after offline.
-   * Forced resend functionality.
-   * Mock server testing.
+   * Licenses are released when the client times out.
  * Test Cases:
-   * TC_Reinit_Offline: Verify the server automatically retries initialization after a timeout period if the initial attempt fails due to the CLS being offline.
-   * TC_Reinit_Forced: Verify the server can be manually triggered to re-initialize (e.g., via an API call or command) to recover from transient connectivity issues.
-   * TC_Reinit_MockServer: Verify the re-initialization behavior using a mock CLS server that can simulate going offline and coming back online.
- * Story Points: 3
-6. SALT-XXXX-6: Verify Proxy/Credit Server License Checkout Options
- * Description: Tests license checkout options (linger, queuing, borrow, filter, sharing). Verifies the correct application of these options.
+   * TC_14.1_Client_Timeout_License_Release: Verify license release on client timeout.
+SALT-XXXX-15: Verify Client Heartbeats
+ * Description: This test verifies the client's heartbeat mechanism, ensuring licenses are maintained while the client is active and that license loss is detected upon disconnection.
  * Acceptance Criteria:
-   * Correct linger behavior for regular licenses.
-   * No linger/queuing for credit licenses.
-   * Credit borrow fails.
-   * Checkout filter functionality.
-   * Dup groups ignored for credit.
+   * Clients maintain licenses while sending heartbeats.
+   * Clients detect license loss when the connection is broken.
+   * Clients attempt to reacquire licenses upon reconnection.
  * Test Cases:
-   * TC_Options_Linger: Verify the server correctly applies linger behavior to regular licenses (holding them for a short period after check-in).
-   * TC_Options_Queuing: Verify that queuing requests for credit-based licenses are ignored (as they should never be busy).
-   * TC_Options_Borrow: Verify that attempts to "borrow" credit-based licenses (if such a concept exists in your system) fail as they should not be borrowable.
-   * TC_Options_Filter: Verify that the license checkout filter function is correctly called and can be used to filter out specific licenses (e.g., credit-based licenses).
-   * TC_Options_Sharing: Verify that the server ignores attempts to set dup groups (UHD) for credit-based licenses. All credit-based licenses should be treated as not shared (dup group NONE).
- * Story Points: 5
-7. SALT-XXXX-7: Verify Proxy/Credit Server License Checkout/Check-in
- * Description: Tests core checkout/check-in (regular, credit, mixed). Verifies proper license management.
+   * TC_15.1_Client_Heartbeat_License_Maintenance: Verify license maintenance with heartbeats.
+   * TC_15.2_License_Loss_Detection: Verify license loss detection on disconnection.
+   * TC_15.3_License_Reacquisition_Reconnect: Verify license reacquisition upon reconnection.
+
+SALT-XXXX-20: Verify Server Configuration and Reporting Test Suite
+ * Description: This comprehensive test suite validates all aspects of server configuration and reporting, ensuring correct behavior for timer values, report masking, and report content for credit-based licenses.  It verifies the server's ability to read and apply configuration settings, handle various timer formats, enforce report masking, and generate accurate reports.
  * Acceptance Criteria:
-   * Successful regular/credit checkout.
-   * Mixed checkout handling.
-   * Various check-in triggers.
-   * License upgrade handling.
+   * Timer Values:
+     * Server correctly reads and utilizes configured timer values ("offlineTimer," "connIdleTimer," "beatTimer," "reportTimer," "diskCacheTimer").
+     * Timer values support different units (seconds, minutes, hours).
+     * Timer values can be provided as comma-separated lists with suffixes for different credit server states (normal, offline, credits checked out, credits checked out offline).
+     * Invalid timer values are handled gracefully (e.g., default values are used).
+   * Report Masking:
+     * Report mask is enforced, with only specified fields included in reports.
+     * Mandatory fields (e.g., feature name) are always included in reports, regardless of the mask.
+   * Report Content (Credit-Based Licenses):
+     * Server reports for checked-out credit-based licenses contain all expected fields with accurate values: "feature," "version," "signature," "ckoData," "vendor," "user," "host," "display," "project," "IP address," "PID," "when," "nlic," "handle," "flags," and "duration."
  * Test Cases:
-   * TC_Checkout_Regular: Verify clients can successfully check out regular licenses when available.
-   * TC_Checkout_Credit: Verify clients can successfully check out credit-based licenses when available.
-   * TC_Checkout_Mixed: Verify the server correctly handles mixed checkout scenarios where clients attempt to check out both regular and credit-based licenses.
-   * TC_Checkin: Verify licenses are correctly checked in under various conditions: explicit release by the client, job completion, client disconnection, and server shutdown.
-   * TC_Upgrade: Verify the server correctly handles license upgrade requests (same license, higher seat count).
- * Story Points: 8
-8. SALT-XXXX-8: Verify Proxy/Credit Server License Sharing
- * Description: Tests sharing with dup groups and vendor data. Verifies correct license sharing behavior.
+   * TC_20.1_Timer_Values_Single_Valid: Verify server uses valid, single configured timer values.
+   * TC_20.2_Timer_Values_Multiple_Units: Verify timer values with different units (s, m, h) are handled correctly.
+   * TC_20.3_Timer_Values_Comma_Separated: Verify parsing of comma-separated timer values.
+   * TC_20.4_Timer_Values_State_Suffixes: Verify interpretation of state-specific timer suffixes.
+   * TC_20.5_Timer_Values_Invalid_Handling: Verify graceful handling of invalid timer values (e.g., non-numeric).
+   * TC_20.6_Report_Masking_Enforcement: Verify report mask enforcement, including exclusion of masked fields.
+   * TC_20.7_Report_Mandatory_Fields: Verify mandatory fields are always included, even if masked.
+   * TC_20.8_Report_Content_All_Fields: Verify all expected fields are present in credit license reports.
+   * TC_20.9_Report_Field_Accuracy: Verify the accuracy of all field values in credit license reports.
+
+SALT-XXXX-20: Comprehensive Server Configuration and Reporting Test Suite
+ * Description: This comprehensive test suite validates all aspects of server configuration and reporting, ensuring correct behavior for timer values, report masking, and report content for credit-based licenses.  It verifies the server's ability to read and apply configuration settings, handle various timer formats, enforce report masking, and generate accurate reports.
  * Acceptance Criteria:
-   * Correct UHDV and dup group NONE behavior.
-   * Vendor data interaction.
+   * Timer Values:
+     * Server correctly reads and utilizes configured timer values ("offlineTimer," "connIdleTimer," "beatTimer," "reportTimer," "diskCacheTimer").
+     * Timer values support different units (seconds, minutes, hours).
+     * Timer values can be provided as comma-separated lists with suffixes for different credit server states (normal, offline, credits checked out, credits checked out offline).
+     * Invalid timer values are handled gracefully (e.g., default values are used).
+   * Report Masking:
+     * Report mask is enforced, with only specified fields included in reports.
+     * Mandatory fields (e.g., feature name) are always included in reports, regardless of the mask.
+   * Report Content (Credit-Based Licenses):
+     * Server reports for checked-out credit-based licenses contain all expected fields with accurate values: "feature," "version," "signature," "ckoData," "vendor," "user," "host," "display," "project," "IP address," "PID," "when," "nlic," "handle," "flags," and "duration."
  * Test Cases:
-   * TC_Sharing_DupGroup: Verify the server correctly implements license sharing based on UHDV settings and dup groups, including ensuring that credit-based licenses are not shared unless specifically allowed.
-   * TC_Sharing_VendorData: Verify the server correctly uses vendor data (if applicable) to further refine license sharing behavior, including ensuring that different vendor data values prevent sharing even if other criteria allow it.
- * Story Points: 5
-9. SALT-XXXX-9: Verify Proxy/Credit Server Options File Functionality
- * Description: Tests options file (include/exclude). Verifies access control mechanisms.
- * Acceptance Criteria:
-   * Include/exclude enforced.
-   * Denial prevents credit activity.
- * Test Cases:
-   * TC_Options_Lists: Verify the server correctly enforces include/exclude lists defined in the options file, granting or denying access to licenses based on
+   * TC_20.1_Timer_Values_Single_Valid: Verify server uses valid, single configured timer values.
+   * TC_20.2_Timer_Values_Multiple_Units: Verify timer values with different units (s, m, h) are handled correctly.
+   * TC_20.3_Timer_Values_Comma_Separated: Verify parsing of comma-separated timer values.
+   * TC_20.4_Timer_Values_State_Suffixes: Verify interpretation of state-specific timer suffixes.
+   * TC_20.5_Timer_Values_Invalid_Handling: Verify graceful handling of invalid timer values (e.g., non-numeric).
+   * TC_20.6_Report_Masking_Enforcement: Verify report mask enforcement, including exclusion of masked fields.
+   * TC_20.7_Report_Mandatory_Fields: Verify mandatory fields are always included, even if masked.
+   * TC_20.8_Report_Content_All_Fields: Verify all expected fields are present in credit license reports.
+   * TC_20.9_Report_Field_Accuracy: Verify the accuracy of all field values in credit license reports.
 
 
-Sent from Gmail Mobile
+SALT-XXXX-23: Report Resending Logic
+ * Description: This test suite verifies the server's report resending logic, ensuring that reports are eventually sent even if initial attempts fail due to temporary issues like the server being offline.  It also checks the behavior of the report timer and accumulated metered time during these situations.
+ * Acceptance Criteria:
+   * If sending a report fails (e.g., server offline), the report is resent later.
+   * The report resend delay is appropriate (e.g., exponential backoff).
+   * Going past a report threshold does not affect the report resend delay.
+   * Accumulated metered time is not affected by server offline periods that prevent report sending.
+   * Before a report is to be sent, the mock CLS/mock server timer for regularly sending reports should be different than the report resend timer to avoid conflicts and allow proper detection of report resending.
+ * Test Cases:
+   * TC_23.1_Report_Resend_Offline: Verify reports are resent after the server comes back online.
+   * TC_23.2_Report_Resend_Delay: Verify the report resend delay is appropriate.
+   * TC_23.3_Report_Threshold_Resend: Verify report thresholds don't affect resend delay.
+   * TC_23.4_Metered_Time_Offline: Verify metered time is unaffected by offline periods during report resending.
+   * TC_23.5_Report_Timer_Conflict: Verify report resend timer and regular report timer do not conflict.
+SALT-XXXX-24: Server Heartbeat Mechanism
+ * Description: This test suite validates the server's heartbeat mechanism, which periodically sends heartbeat messages to the CLS/mock server to maintain the connection and inform the CLS/mock server of the server's continued operation.
+ * Acceptance Criteria:
+   * The server periodically sends heartbeat messages to the CLS/mock server.
+   * The heartbeat interval is configurable.
+   * If a heartbeat cannot be sent (e.g., CLS/mock server is unavailable), the server retries sending heartbeats.
+   * The server logs heartbeat failures and recoveries.
+ * Test Cases:
+   * TC_24.1_Heartbeat_Periodic_Send: Verify the server periodically sends heartbeats.
+   * TC_24.2_Heartbeat_Interval: Verify the heartbeat interval is configurable.
+   * TC_24.3_Heartbeat_Retry: Verify heartbeat retries when the CLS/mock server is unavailable.
+   * TC_24.4_Heartbeat_Logging: Verify heartbeat failures and recoveries are logged.
+SALT-XXXX-25: Server Termination and Session Handling
+ * Description: This test suite covers server termination scenarios, including normal shutdown and abnormal termination, ensuring proper session handling and communication with the CLS/mock server.
+ * Acceptance Criteria:
+   * Normal Shutdown:
+     * When a credit server shuts down normally, it sends a termination message to the CLS/mock server.
+     * The server section in the information file is updated to reflect the shutdown.
+     * There is no report generated upon normal server shutdown.
+   * Abnormal Termination:
+     * If the server terminates abnormally (e.g., crash), the information file is updated to indicate the abnormal termination.
+     * Upon restart, the server detects the previous abnormal termination and handles it appropriately (e.g., logs a warning, attempts to recover).
+ * Test Cases:
+   * TC_25.1_Normal_Shutdown_Message: Verify a termination message is sent on normal shutdown.
+   * TC_25.2_Normal_Shutdown_Info_File: Verify the information file is updated on normal shutdown.
+   * TC_25.3_Normal_Shutdown_No_Report: Verify no report is generated on normal shutdown.
+   * TC_25.4_Abnormal_Termination_Info_File: Verify the information file is updated on abnormal termination.
+   * TC_25.5_Abnormal_Termination_Restart: Verify the server handles abnormal termination upon restart.
+
+
+SALT-XXXX-26: Information File Handling
+ * Description: This test suite verifies the server's handling of the information file, including its creation, updates, content, and behavior in different scenarios (normal operation, corruption, missing file, credit enabling/disabling, unsent reports, and open sessions).
+ * Acceptance Criteria:
+   * Normal Operation:
+     * The server periodically saves the report and session ID to the information file.
+     * The file includes server configuration information.
+     * The file indicates whether credit licensing is enabled.
+     * The file is read only at server startup time.
+   * File Absence/Corruption:
+     * If the information file is missing, the server creates a new one.
+     * If the information file is corrupt, the server logs an error and treats it as if it were missing (creates a new one).
+   * Credit Enabling/Disabling:
+     * The information file accurately reflects whether credit licensing is enabled or disabled.
+     * When credits are disabled, the server logs a message indicating this.
+   * Unsent Reports:
+     * If a report is in the information file (unsent), it is sent when the server restarts.
+     * After the unsent report is sent, it is removed from the information file.
+   * Open Sessions:
+     * The information file can indicate an open session (e.g., due to an improper shutdown).
+     * If an open session is detected, a termination message is sent to the CLS/mock server before starting a new session.
+ * Test Cases:
+   * TC_26.1_File_Normal_Operation: Verify normal information file creation, updates, and content.
+   * TC_26.2_File_Missing_Handling: Verify handling of a missing information file.
+   * TC_26.3_File_Corrupt_Handling: Verify handling of a corrupt information file.
+   * TC_26.4_File_Credits_Disabled: Verify the file reflects credits being disabled and the log message is present.
+   * TC_26.5_File_Credits_Enabled: Verify the file reflects credits being enabled.
+   * TC_26.6_File_Unsent_Report: Verify handling of an unsent report in the information file.
+   * TC_26.7_File_Open_Session: Verify handling of an open session in the information file.
+
+SALT-XXXX-27: Credit Enabling and Disabling
+ * Description: This test suite verifies the server's behavior when enabling and disabling credit-based licensing.  It ensures that credit checks are enforced correctly and that the server responds appropriately to CLS/mock server requests to change the credit licensing status.
+ * Acceptance Criteria:
+   * Disabling Credits:
+     * Attempts to check out credit-based licenses fail when credits are disabled.
+     * This includes checkouts due to client heartbeats.
+     * Reports are still sent for any active (non-credit) checkouts.
+     * Existing credit-based licenses that were checked out remain checked out.
+   * Enabling Credits:
+     * Credit-based licenses can be checked out when credits are enabled.
+   * CLS/Mock Server Interaction:
+     * The CLS/mock server can enable and disable credits via the responses to init, report, heartbeat, and terminate messages.
+ * Test Cases:
+   * TC_27.1_Disable_Credits_Checkout_Fails: Verify credit license checkout fails when credits are disabled.
+   * TC_27.2_Disable_Credits_Heartbeat_Fails: Verify credit license checkout due to heartbeats fails when credits are disabled.
+   * TC_27.3_Disable_Credits_Reports_Sent: Verify reports are still sent for non-credit checkouts when credits are disabled.
+   * TC_27.4_Disable_Credits_Existing_Licenses: Verify existing credit licenses remain checked out when credits are disabled.
+   * TC_27.5_Enable_Credits_Checkout_Succeeds: Verify credit license checkout succeeds when credits are enabled.
+   * TC_27.6_CLS_Control_Credits: Verify the CLS/mock server can control credit enabling/disabling.
+SALT-XXXX-28: SAM IAM Integration
+ * Description: This test suite validates the integration of the credit server with SAM IAM for authentication and authorization.  It covers various scenarios, including normal operation, headless client behavior, invalid client information, SAM IAM unavailability, token expiration, and session termination.
+ * Acceptance Criteria:
+   * Authentication:
+     * The credit server obtains authentication tokens from SAM IAM for requests.
+     * For the mock server, there are ways to generate fake authentication tokens.
+   * Headless Client:
+     * The credit server runs as a headless client.
+     * If the credit server is not a headless client, it disables credit licensing and continues to operate.
+   * Error Handling:
+     * If the headless client information is invalid, the server logs an error and disables credit licensing.
+     * If SAM IAM is unreachable, the server logs an error and disables credit licensing.
+     * When an authentication token expires, the server refreshes it via SAM IAM.
+     * If the refresh token expires, the server disables credit licensing.
+     * If the SAM IAM session is terminated, the server disables credit licensing.
+ * Test Cases:
+   * TC_28.1_SAM_IAM_Authentication: Verify the server obtains authentication tokens from SAM IAM.
+   * TC_28.2_Mock_Token_Generation: Verify the mock server can generate fake tokens.
+   * TC_28.3_Headless_Client_Mode: Verify the server runs as a headless client.
+   * TC_28.4_Non_Headless_Behavior: Verify the server disables credits if not running as headless.
+   * TC_28.5_Invalid_Client_Info: Verify the server handles invalid headless client information.
+   * TC_28.6_SAM_IAM_Unreachable: Verify the server handles SAM IAM unavailability.
+   * TC_28.7_Token_Expiration_Refresh: Verify token refresh on expiration.
+   * TC_28.8_Refresh_Token_Expiration: Verify the server handles refresh token expiration.
+   * TC_28.9_SAM_IAM_Session_Termination: Verify the server handles SAM IAM session termination.
+
+
+
+
+
