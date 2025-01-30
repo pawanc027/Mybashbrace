@@ -1,8 +1,8 @@
-Story Title: SALT-XXXX: Implement Proxy/Credit Server Startup Logic
+SALT-XXXX: Verify Proxy/Credit Server Startup Functionality
 
 Description:
 
-This story covers the implementation of the proxy/credit server startup logic.  The server needs to correctly identify and utilize license information (regular or credit) during startup, determining the appropriate operating mode. This implementation will handle the logic for parsing server ID features and initializing the server accordingly.
+This story covers the testing of the proxy/credit server startup functionality.  The tests will verify the server's ability to correctly identify and utilize license information (regular or credit) during startup, ensuring it enters the appropriate operating mode. This includes validating the parsing of server ID features and the subsequent server initialization.
 
 Acceptance Criteria:
 
@@ -26,18 +26,6 @@ Acceptance Criteria:
 
 Test Cases:
 
- * TC_Startup_RegularMode: Unit test verifying regular mode startup with a valid regular license.
+ * TC_Startup_RegularMode: Test server startup in regular mode with a valid regular license.
 
- * TC_Startup_CreditMode: Unit test verifying credit mode startup with a valid credit license.
-
-Story Points: (Estimate based on complexity - likely 3 or 5)
-
-Notes:
-
- * This story focuses on the implementation of the startup logic itself.  Testing (beyond basic unit tests) will be handled in separate stories.
-
- * Error handling (e.g., invalid licenses) will be implemented and tested as part of this story, but specific error scenarios may be covered in separate test cases.
-
-
-
-Sent from Gmail Mobile
+ * TC_Startup_CreditMode: Test server startup in credit mode with a valid credit license
